@@ -1,0 +1,163 @@
+---
+title: "b3"
+author: "Đinh Quang Dũng"
+date: "2024-02-28"
+output: html_document
+---
+
+
+
+```{r}
+rnorm(10,170,sqrt(16.2))
+
+set.seed(1)
+
+rnorm(10,170,sqrt(16.2))
+#HQTT cua Y theo X lm(Y~X,data) ket qua tom tat summary(lm(Y~X,data))
+#BT mo hinh dung Y = 3 + 2X
+# sinh ra 100 bo (X,Y) theo cach sau
+# 1. lay 100 gtri cua X tu pp chuan N(1,1): set.seed(1)
+#2. lay 100 gtri sai so tu e tu pp chuan  N(0:0.04) set.seed(2)
+#3. tao 100 gtri cua Y tu mo hinh dung cong them e: Y = 3 + 2X +e
+#tu 100 bo du lieu (X,Y) dc tao, hay uoc luong mo hinh Y = a_0 + a_1*x + e
+# Dua ra cac gtri uoc luong cua he so a_0,a_1 kiem dinh a_0,a_1
+# kiem dinh phan du : phan du co tuan theo pp chuan voi GTTB bang 0 k shapiro.test(e) kdinh pp chuan H0: e tuan theo pp chuan
+# cach 2 kiem dinh pp chuan   ks.test(e,pnorm)
+
+# Neu e tuan theo pp chuan thi de kd xem gttb co bang 0 k thi dung t.test(e)
+# neu e k tuan theo pp chuan thi wilcox.test(e)
+
+# ve do thi tan xa (X,y) ve them duong thang hoi quy Y = a_0 + a_1 * X
+```
+
+
+```{r}
+set.seed(1)
+x=rnorm(100,1,1)
+x
+
+
+set.seed(2)
+e = rnorm(100,0,sqrt(0.04))
+e
+
+y= 3 + 2*x + e
+y
+
+ul=lm(y~x)
+summary(ul)
+#pt hqtt la Y = a_0 + a_1 *X
+# uoc luong cua a_0 la 3.03 a_1 la 1.9696029
+# duong hoi quy tt la Y = 3.0303 + 1.9679 * X
+# dua ra cac gtri ul a_0, a-1
+confint(ul,level = 0.9)
+# kdinh a_0,a_1
+summary(ul)
+
+# H0 a_0 =0 >< H1 a_0 != 0
+# p_value < 0,.05 -> bac bo H0 -> a_0 thuc su khac 0
+## tuong tu a_1 trong summary
+## kiem dinh phan du
+## H0 phan du tuan theo pp chuan >< H1 phan du
+shapiro.test(ul$residuals)
+## p_value > 0.05 chap nhan H0 tuc la phan du theo theo
+# H0 Ê =0 >< H1 Ee !=0
+t.test(ul$residuals)
+# p_value > 0.05 chap nhan H0 , phan du tuan theo
+# ve do thi tan xa (x,y) them duong thang Y = a_0 + a_1X + e
+plot(x,y,main = "Bieu do tan xa")
+abline(ul)
+a_0 = 3.03790
+a_1 = 1.96029
+
+summary(ul)
+abline(a=a_0,b=a_1)
+
+```
+
+
+```{r}
+
+#Xây dựng mô hình trên tập training và áp dụng mô hình vào tập testing
+#1. Chia bộ dữ liệu {(x_i,y_i)} ban đầu thành hai tập con:
+####training set và testing set
+##Lấy ngẫu nhiên một tập dữ liệu con (theo tỉ lệ cho trước) để làm traing set
+####và phần dữ liệu còn lại dùng làm testing set
+#2. Xử lý trên training set: Mô hình hồi quy lý thuyết Y = alpha_0 + alpha_1 * X + e
+##(i)- Đưa ra ước lượng của hệ số hồi quy: alpha_0_h và alpha_1_h
+###-> Phương trình đường thẳng hồi quy: y = alpha_0_h + alpha_1_h * x
+###- Đưa ra khoảng tin cậy beta cho hệ số hồi quy alpha_0 và alpha_1
+###-> KTC beta cho alpha_0 là (a,b): P(a < alpha_0 < b) = beta
+##(ii)- Kiểm định/Đánh giá các hệ số hồi quy, tức kiểm định bài toán:
+###H0: alpha_0 = 0 vs H1: alpha_0 != 0
+##(iii) - Kiểm định phần dư có tuân theo pp chuẩn với giá trị trung bình bằng 0 k?
+#3. Đánh giá mô hình trên dựa vào testing set
+##- Tính TSS = sum((y - mean(y))^2)
+##- Tính RSS = sum(e^2) = sum((y - y_h)^2),trong đó y_h = alpha_0_h + alpha_1_h * x
+##- Tính R2 = 1 - RSS/TSS: hệ số xác định
+####R2 càng lớn thì ước lượng của a_0, a_1 càng tốt
+
+
+
+data(iris)
+set.seed(1)
+# use 70 % dataset as tranning set and remain 30 % as testing set
+sample= sample(c(TRUE,FALSE),nrow(iris),replace=TRUE,prob = c(0.7,0.3))
+# sinh ra 1 vecto ngau nhien gom n n quan sat (n = nrow(iris) gia tri = so hang cua )
+# cac gtri cua mau sample la TRUE or F
+# tham so replace = TRUE tuc la cac gtri T or F co the lap lai nhieu lan
+# tham so prob=c(0.7,0.3) tuc la 70% gtri cua mau sample la true,30 la f
+
+sample
+table(sample)
+train = iris[sample,]
+
+train
+dim(train)
+test =  iris[!sample,]
+
+# iris xay dung mo hinh hqtt sepal.length(y) theo petal.length(x)
+
+
+
+
+```
+
+
+```{r}
+data(datasets)
+attach(cars)
+View(cars)
+set.seed(1)
+### Chia bộ dữ liệu cars thành hai bộ dữ liệu con:training(65%) và testing(35%)
+data_car=sample(c(TRUE,FALSE),50,replace= TRUE,prob=c(0.65,0.35))
+data_car
+
+table(data_car)
+
+train=cars[data_car,]
+train 
+
+dim(train)
+
+testing = cars[!data_car,]
+### Phân tích hồi quy tuyến tính của biến dist theo speed trên bộ dữ liệu training.
+ul = lm(dist ~ speed,data = train)
+summary(ul)
+
+###  Mô hình hồi quy lý thuyết Y = a_0 + a_1 * X + e
+
+e = residuals(train)
+
+a_0 = -16.6093
+a_1 = 3.8433
+
+# dua ra cac gtri ul a_0, a-1
+confint(a_0,a_1)
+
+shapiro.test(ul$residuals)
+
+t.test(ul$residuals)
+
+
+```

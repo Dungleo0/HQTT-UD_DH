@@ -1,0 +1,391 @@
+---
+title: "Untitled"
+author: "Đinh Quang Dũng"
+date: "`r Sys.Date()`"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r}
+
+
+library(ISLR)
+data(Default)
+#5
+#a
+default_data = Default
+
+View(default_data)
+
+logit_model <- glm(default ~ income + balance, data = default_data, family = binomial)
+
+summary(logit_model)
+
+
+```
+
+```{r}
+
+
+#b
+set.seed(123)
+
+train_indices <- sample(1:nrow(default_data), 0.7*nrow(default_data))
+train_set <- default_data[train_indices, ]
+valid_set <- default_data[-train_indices, ]
+
+
+
+# Lập mô hình hồi quy logistic trên tập huấn luyện
+logit_model_train <- glm(default ~ income + balance, data = train_set, family = binomial)
+
+# Dự đoán trên tập xác thực
+predictions <- predict(logit_model_train, newdata = valid_set, type = "response")
+
+# Phân loại dự đoán
+predicted_default <- ifelse(predictions > 0.5, "Yes", "No")
+
+# Tính lỗi của tập xác thực
+validation_error <- mean(predicted_default != valid_set$default)
+validation_error
+
+
+```
+
+
+```{r}
+
+
+#c
+
+
+set.seed(123)
+
+errors <- numeric(3)
+for (i in 1:3) {
+  # Chia tập dữ liệu thành tập huấn luyện và tập xác thực
+  train_indices <- sample(1:nrow(default_data), 0.7*nrow(default_data))
+  train_set <- default_data[train_indices, ]
+  valid_set <- default_data[-train_indices, ]
+  
+  # Lập mô hình hồi quy logistic trên tập huấn luyện
+  logit_model_train <- glm(default ~ income + balance, data = train_set, family = binomial)
+  
+  # Dự đoán trên tập xác thực
+  predictions <- predict(logit_model_train, newdata = valid_set, type = "response")
+  
+  # Phân loại dự đoán
+  predicted_default <- ifelse(predictions > 0.5, "Yes", "No")
+  
+  # Tính lỗi của tập xác thực và lưu vào vector errors
+  errors[i] <- mean(predicted_default != valid_set$default)
+}
+
+# In ra các giá trị lỗi
+errors
+
+
+
+```
+
+
+```{r}
+
+#d
+
+# Lập mô hình hồi quy logistic với biến giả sinh viên
+logit_model_student <- glm(default ~ income + balance + student, data = default_data, family = binomial)
+
+# Tính lỗi của mô hình mới
+predictions_student <- predict(logit_model_student, newdata = valid_set, type = "response")
+predicted_default_student <- ifelse(predictions_student > 0.5, "Yes", "No")
+validation_error_student <- mean(predicted_default_student != valid_set$default)
+validation_error_student
+
+```
+
+
+```{r}
+
+#########
+#6
+
+# Load required libraries
+library(ISLR)
+library(boot)
+
+# Set random seed
+set.seed(123)
+
+# (a) Using glm() function to determine estimated standard errors
+model <- glm(default ~ income + balance, data = Default, family = binomial)
+summary(model)
+
+```
+
+
+```{r}
+
+# (b) Define boot.fn() function
+boot.fn <- function(data, index) {
+  fit <- glm(default ~ income + balance, data = data[index, ], family = binomial)
+  return(coef(fit))
+}
+```
+
+```{r}
+
+# (c) Use boot() function to estimate standard errors using bootstrap
+boot.results <- boot(Default, boot.fn, R = 1000)
+boot.results
+```
+
+
+##########
+#7
+
+
+```{r}
+
+
+
+# Load required libraries
+library(ISLR)
+
+# (a) Fit logistic regression model using Lag1 and Lag2 to predict Direction
+model_a <- glm(Direction ~ Lag1 + Lag2, data = Weekly, family = binomial)
+
+```
+
+
+```{r}
+# (b) Fit logistic regression model using Lag1 and Lag2, excluding the first observation
+model_b <- glm(Direction ~ Lag1 + Lag2, data = Weekly[-1, ], family = binomial)
+
+
+```
+
+
+```{r}
+
+
+# (c) Predict direction for the first observation using model_b
+prediction <- predict(model_b, newdata = Weekly[1, ], type = "response")
+if (prediction > 0.5) {
+  direction_predicted <- "Up"
+} else {
+  direction_predicted <- "Down"
+}
+# Check if the prediction matches the actual direction for the first observation
+if (direction_predicted == Weekly$Direction[1]) {
+  correct_classification <- TRUE
+} else {
+  correct_classification <- FALSE
+}
+```
+
+
+```{r}
+
+# (d) Implement LOOCV using a for loop
+n <- nrow(Weekly)
+errors <- numeric(n)
+for (i in 1:n) {
+  # Fit logistic regression model using all but the ith observation
+  model <- glm(Direction ~ Lag1 + Lag2, data = Weekly[-i, ], family = binomial)
+  
+  # Predict the direction for the ith observation
+  prediction <- predict(model, newdata = Weekly[i, ], type = "response")
+  
+  # Determine if an error was made
+  if ((prediction > 0.5 & Weekly$Direction[i] == "Down") | (prediction <= 0.5 & Weekly$Direction[i] == "Up")) {
+    errors[i] <- 1
+  } else {
+    errors[i] <- 0
+  }
+}
+
+```
+
+
+```{r}
+
+# (e) Compute LOOCV estimate for the test error
+LOOCV_error <- mean(errors)
+LOOCV_error
+
+```
+
+```{r}
+
+
+#######
+#8
+
+#a
+set.seed(1)
+y <- rnorm(100)
+x <- rnorm(100)
+y <- x - 2 * x^2 + rnorm(100)
+
+```
+
+```{r}
+
+#b
+
+plot(x, y, main = "Scatterplot of X against Y", xlab = "X", ylab = "Y")
+
+
+```
+
+
+```{r}
+
+
+#c
+# Khởi tạo vector lưu trữ LOOCV errors
+LOOCV_errors <- numeric(4)
+
+# Mô hình 1: Y = β0 + β1X
+model1 <- lm(y ~ x)
+LOOCV_errors[1] <- sum((residuals(model1) / (1 - hatvalues(model1)))^2) / 100
+
+# Mô hình 2: Y = β0 + β1X + β2X^2
+model2 <- lm(y ~ x + I(x^2))
+LOOCV_errors[2] <- sum((residuals(model2) / (1 - hatvalues(model2)))^2) / 100
+
+# Mô hình 3: Y = β0 + β1X + β2X^2 + β3X^3
+model3 <- lm(y ~ x + I(x^2) + I(x^3))
+LOOCV_errors[3] <- sum((residuals(model3) / (1 - hatvalues(model3)))^2) / 100
+
+# Mô hình 4: Y = β0 + β1X + β2X^2 + β3X^3 + β4X^4
+model4 <- lm(y ~ x + I(x^2) + I(x^3) + I(x^4))
+LOOCV_errors[4] <- sum((residuals(model4) / (1 - hatvalues(model4)))^2) / 100
+
+# In kết quả
+print(LOOCV_errors)
+
+
+```
+
+
+```{r}
+
+
+###########
+#9
+
+#a
+
+library(MASS)
+
+data(Boston)
+
+mu_hat <- mean(Boston$medv)
+mu_hat
+
+```
+
+```{r}
+
+#b
+se_mu_hat <- sd(Boston$medv) / sqrt(length(Boston$medv))
+se_mu_hat
+
+
+```
+
+```{r}
+
+
+#c
+
+# Bootstrap estimation of the standard error of mu_hat
+boot_mu <- function(data, index) {
+  mean(data[index])
+}
+set.seed(1)
+bootstrap_mu <- replicate(1000, boot_mu(Boston$medv, sample(length(Boston$medv), replace = TRUE)))
+se_boot_mu <- sd(bootstrap_mu)
+se_boot_mu
+
+
+```
+
+```{r}
+
+#d
+# 95% confidence interval for the mean of medv
+lower_bound <- mu_hat - 2 * se_boot_mu
+upper_bound <- mu_hat + 2 * se_boot_mu
+confidence_interval <- c(lower_bound, upper_bound)
+confidence_interval
+
+# Comparison with t.test
+t_test_result <- t.test(Boston$medv)
+t_test_result$conf.int
+
+```
+
+
+```{r}
+
+#e
+
+# Estimate for the median value of medv
+mu_med_hat <- median(Boston$medv)
+mu_med_hat
+
+```
+
+```{r}
+
+
+#f
+
+# Bootstrap estimation of the standard error of mu_med_hat
+bootstrap_med <- function(data, index) {
+  median(data[index])
+}
+set.seed(1)
+bootstrap_median <- replicate(1000, bootstrap_med(Boston$medv, sample(length(Boston$medv), replace = TRUE)))
+se_boot_med <- sd(bootstrap_median)
+se_boot_med
+
+```
+
+
+```{r}
+
+
+#g
+# Estimate for the tenth percentile of medv
+mu_01_hat <- quantile(Boston$medv, 0.1)
+mu_01_hat
+
+```
+
+
+```{r}
+
+#h
+
+# Define the bootstrap function to estimate the standard error of mu_0.1_hat
+bootstrap_01 <- function(data, index) {
+  quantile(data[index], 0.1)
+}
+
+# Set random seed for reproducibility
+set.seed(1)
+
+# Perform bootstrap to estimate the 10th percentile
+bootstrap_quantile <- replicate(1000, bootstrap_01(Boston$medv, sample(length(Boston$medv), replace = TRUE)))
+
+# Standard error of mu_0.1_hat
+se_01 <- sd(bootstrap_quantile)
+se_01
+            
+
+```

@@ -1,0 +1,83 @@
+---
+title: "t7"
+author: "Đinh Quang Dũng"
+date: "2024-03-27"
+output: word_document
+---
+
+```{r}
+
+data = read.csv("D:\\PTHQ\\b7\\Australian Institute of Sport.csv")
+View(data)
+sum(is.na(data))
+na.omit(data)
+
+set.seed(1)
+
+data$Sex = factor(data$Sex)
+sample=sample(c(TRUE,FALSE),202,replace = TRUE,prob = c(0.7,0.3))
+sample
+
+head(data)
+
+train=data[sample,]
+test=data[!sample,]
+
+
+ul = glm(Sex ~ RCC + Ferr + BMI + SSF,data=train,family = binomial)
+ul
+summary(ul)
+
+# Sex = 1 / (1 + exp(31.86789- 3.66463-0.03175-0.94652+0.14127))
+# p_value < 0.05 nen cac bien deu co y nghia
+# ko can cai tien mo hinh
+contrasts(data$Sex)
+
+
+glm.probs=predict(ul,test,type="response")
+nrow(test)
+glm.pred=rep("female",nrow(test))
+glm.pred[glm.probs > 0.5]="male"
+table(glm.pred,test$Sex)
+
+predict(ul,data.frame(RCC=4.2,Ferr = 68, BMI = 24,SSF=114),type = "response")
+1/(1+exp(7.706157))
+# day la nu
+
+
+
+
+
+
+```
+
+```{r}
+
+
+
+library(rms)
+
+library(pROC)
+xs=ifelse(predict(ul,type = "response",test) > 0.5, "male","female")
+train$Sex <- as.factor(train$Sex)
+ul <- glm(Sex ~ RCC + Ferr + BMI + SSF, data = train, family = binomial)
+nom <- nomogram(ul, data = train)
+
+head(train)
+predicted_prob <- predict(nom, data.frame(RCC = 4.2, Ferr = 68, BMI = 24, SSF = 114), fun = function(x) 1 / (1 + exp(-x)))
+print(predicted_prob)
+
+predicted_probs <- predict(ul, test, type = "response")
+
+# Tính đường cong ROC và AUC
+roc_data <- roc(test$Sex, predicted_probs)
+
+# Vẽ đồ thị đường cong ROC
+plot(roc_data, main = "ROC Curve", col = "blue")
+
+# Hiển thị giá trị ngưỡng
+coords <- coords(roc_data, "best", best.method = "closest.topleft")
+points(coords, pch = 16, col = "red")
+text(coords, labels = sprintf("%.3f", coords$threshold), pos = 2)
+legend("bottomright", legend = sprintf("AUC = %.3f", auc(roc_data)), col = "blue", lwd = 1, bty = "n")
+```

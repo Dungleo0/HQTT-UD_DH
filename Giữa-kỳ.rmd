@@ -1,0 +1,146 @@
+---
+title: "Giữa Kỳ"
+output: html_document
+date: "2023-03-28"
+---
+
+Câu 1:
+
+a)  
+
+```{r}
+data = read.csv("C:\\Users\\84368\\OneDrive\\Documents\\R\\Phân tích hồi quy\\ChiSoSucKhoe.csv")
+attach(data)
+```
+
+b)  
+
+```{r}
+first = lm(RCC~1)
+last = lm(RCC~., data = data)
+backward =  step(last, formula(first), direction = "backward", trace = 1  )
+backward$anova
+backward$coefficients
+```
+
+ta có mô hình :
+
+RCC = $4.90069020 + 0.03545831WCC - 0.03941675 XBfat -0.00606414 Ht + 0.01587103 Wt$
+
+```{r}
+summary(backward)
+```
+
+Kiểm định bài toán $H_0: \alpha_i = 0 | H_1: \alpha_i \neq 0$ , $i=0 \rightarrow 4$
+
+ta nhận thấy với p_value(Ht) = 0.1547 \> 0.05. Có cơ sở để chấp nhận H_0
+
+Kl vậy a_0, a_1, a_2 và a_4 $\neq$ 0 và a_3 = 0
+
+Ta viết lại phương trình:
+
+```{r}
+lm(RCC ~ WCC + XBfat + Wt, data = data)
+```
+
+Thu được PTHQ mới là: RCC = 4.02830 + 0.03629 WC -0.03765 XBfat +0.01254 Wt
+
+d)  
+
+```{r}
+e = backward$residuals
+shapiro.test(e)
+t.test(e)
+wilcox.test(e)
+```
+
+Bài toán: H0: Phần dư tuân theo phân phối chuẩn \| H1: phần dư không tuân theo phân phối chuẩn
+
+Với p-value =5.586e-05 \<0.05 có cơ sở để nói Phần dư không tuân theo phân phối chuẩn
+
+Kiểm định bài toán $H_0: e = 0 | H_1: e \neq 0$
+
+với p-value = 0.7005 \> 0.05 có cơ sở để nói phần dư có giá trị trung bình bằng 0.
+
+Bài 2:
+
+a)  
+
+```{r}
+set.seed(1)
+X = rnorm(1000, 165, sqrt(25))
+E = rnorm(1000, 0, sqrt(1))
+Y <- X^3-2*X^2 +X+E
+
+library(boot)
+z=data.frame(X,Y)
+cv.error = rep(0,5)
+for (i in 1:5) {
+glm.fit=glm(Y~poly(X,i))
+cv.error[i]=cv.glm(z ,glm.fit)$delta[1]
+}
+cv.error
+```
+
+b)  sai số LOOCV trong mô hình Bậc 3 là nhỏ nhất, điều đó là hợp lí vì hệ số của bậc 4 và bậc 5 bằng 0, chúng ta đang kiểm định với Y được sinh ra theo hàm bậc 3 nên đây là đúng nhất.
+
+```{r}
+summary(glm(Y~poly(X,5)))
+```
+
+Bài 3:
+
+a)  
+
+```{r}
+library(boot)
+dataM = motor
+attach(dataM)
+
+
+mu = mean(times)
+mu
+se = var(times)
+se
+
+```
+
+b)  
+
+```{r}
+e =sqrt(var(times)/nrow(dataM))
+e
+```
+
+c)  Sử dụng bootstrap để ước lượng độ lệch chuẩn của μˆ. So sánh với kết quả ý (b).
+
+```{r}
+boot.fn=function (data ,index){
+  return(coef(lm(times~1 ,data=dataM , subset=index)))
+}
+boot.fn(dataM,1:length(times))
+
+b = boot( dataM, boot.fn, R = 10000)
+b
+```
+
+kết quả gần như tương đồng với ý (c)
+
+d)  Dựa vào kết quả ý (c), tìm khoảng tin cậy 90% cho kỳ vọng của times. So sánh kết
+
+quả thu được với kết quả khi sử dụng hàm t.test.
+
+```{r}
+boot.q=function (data ,index){
+  mean(data[index])
+}
+boot.fn(dataM,1:length(times))
+
+b1 = boot( times, boot.q, R = 10000)
+boot.ci( b1,conf = 0.9, type = "basic")
+t.test(times, conf.level = 0.9)
+```
+
+ta nhận thấy từ bootstrap ta thu được khoảng tin cậy 90% cho kỳ vọng của times là: 23.49; 28.25
+
+và ta thu được từ t.test khoảng: 23.50869 28.29131 có thể thấy giá trị của chúng xấp xỉ bằng nhau.

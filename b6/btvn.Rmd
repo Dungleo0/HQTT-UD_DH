@@ -1,0 +1,42 @@
+---
+title: "BTVN t7"
+author: "Đinh Quang Dũng"
+date: "2024-03-24"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r}
+library(ISLR)
+data("Weekly")
+
+summary(Weekly)
+pairs(Weekly)
+
+full_model <- glm(Direction ~ Lag1 + Lag2 + Lag3 + Lag4 + Lag5 + Volume, data = Weekly, family = binomial)
+summary(full_model)
+
+
+dubao <-predict(full_model, type = "response") 
+confusion_matrix <- table(Weekly$Direction,dubao > .5)
+confusion_matrix
+
+(54 + 557) / nrow(Weekly)
+
+
+# data from 2009 and 2010 
+# train and test
+train_data <- subset(Weekly, Year < 2009)
+test_data <- subset(Weekly, Year >= 2009)
+
+train_model <- glm(Direction ~ Lag2, data = train_data, family = binomial)
+
+predicted_direction_test <- predict(train_model, newdata = test_data, type = "response")
+table(test_data$Direction,predicted_direction_test > .5)
+
+
+
+(9 + 56) / (9 + 34 + 5 + 56)
+
+```

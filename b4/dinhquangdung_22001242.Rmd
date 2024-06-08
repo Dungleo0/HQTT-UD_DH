@@ -1,0 +1,56 @@
+---
+title: "TH5"
+author: "Đinh Quang Dũng"
+date: "2024-03-11"
+output:
+  word_document: default
+  html_document: default
+---
+
+
+Sử dụng bộ dữ liệu Boston trong gói lệnh MASS bao gồm 14 biến liên quan đến
+giá trị nhà ở vùng ngoại ô ở Boston và hàm step, phân tích hồi quy bội của biến
+medv (giá nhà trung bình – đơn vị: nghìn $) theo các biến còn lại.
+a) Đưa ra mô hình hồi quy tuyến tính “forward” và “ backward” tốt nhất.
+b) Khi phân tích “forward”, nếu biến medv được biểu diễn theo hai biến thì đó
+là những biến nào?
+c) Khi phân tích “backward”, kiểm định xem các hệ số trong mô hình hồi quy
+tuyến tính thu được có thực sự khác 0 không? Phần dư có tuân theo phân
+phối chuẩn với giá trị trung bình bằng 0 không?
+```{r}
+
+#a
+library("MASS")
+data(Boston)
+
+only = lm(medv ~ 1,data = Boston)
+
+summary(only)
+
+all = lm(medv ~ .,data = Boston)
+
+summary(all)
+
+forward = step(only,formula(all),direction = "forward",trace=0)
+
+forward$anova
+summary(forward)
+
+backward = step(all,formula(all),direction = "backward",trace = 0)
+backward$anova
+summary(backward)
+#b
+# khi bieu dien medv theo 2 bien tu forward thi 2 bien la age va indus
+# khi bien dien medv theo backward thi cac bien trong Boston tru 2 bien la age va indus 
+
+
+#c Khi phân tích “backward”, kiểm định xem các hệ số trong mô hình hồi quy
+# tuyến tính thu được có thực sự khác 0 không? Phần dư có tuân theo phân
+# phối chuẩn với giá trị trung bình bằng 0 không?
+summary(backward)
+
+confint(backward)
+
+shapiro.test(backward$residuals)
+wilcox.test(backward$residuals)
+```

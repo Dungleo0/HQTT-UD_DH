@@ -1,0 +1,113 @@
+---
+title: "Untitled"
+author: "Đinh Quang Dũng"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r}
+library(tree)
+library(ISLR)
+
+attach(Carseats)
+
+names(Carseats)
+
+#Y ~ X1 + X2 + ... bien dau ra Y la bien phan loai, pp dgl cay phan loai
+```
+
+```{r}
+High = as.factor(ifelse(Sales <=8,"No","Yes"))  # tao bien High la bien phan loai dua tren gtri sales 
+#Carseats=data.frame(Carseats,High) # ghep noi bo dl ban dau voi bien High vua tao
+tree.carsrats = tree(High ~.-Sales,Carseats)   # cu phap tree giong voi lm(glm): du doan High theo tat ca cac bien tru Sales
+summary(tree.carsrats)
+# Vẽ biểu đồ
+plot(tree.carsrats)
+
+# Thêm các nhãn cho cây
+text(tree.carsrats, pretty = 0, cex = 0.4)
+
+levels(Carseats$ShelveLoc)
+#Price < 92.5 cac quan sat thuoc nhanh ben trai thoa man Price < 92.5 cac quan sat thuoc nhanh ben phai se thoa man Price >= 9.5
+
+#ShelveLoc: Bad, Medium cac qsat thuoc nhanh trai se tm SheveLoc la Bad hoac Medium , nhanh ben phai la Good
+
+set.seed(2)
+train=sample(1:nrow(Carseats),200)
+Carseats.test=Carseats[-train,]
+High.test=High[-train]
+
+tree.carsrats=tree(High~.-Sales,Carseats,subset = train)
+
+tree.pred=predict(tree.carsrats,Carseats.test,type="class")
+table(tree.pred,High.test)
+
+#Xem set dp chinh xac khi ap dung vao tap test
+(104+50)/200 # do chinh xac
+
+#xet xem cay co bn la la phu hop? cat tia cay
+
+cv.careats = cv.tree(tree.carsrats,FUN=prune.misclass)
+names(cv.careats)
+
+cv.careats # dev cac nho thi lua chon tot
+```
+
+```{r}
+par(mfrow=c(1,2))
+plot(cv.careats$size,cv.careats$dev,type = "b")
+plot(cv.careats$k,cv.careats$dev,type = "b")
+
+plot(cv.careats$size,cv.careats$dev,type = "o")
+plot(cv.careats$k,cv.careats$dev,type = "b")
+
+dev.off()
+```
+
+```{r}
+
+prune.carseats=prune.misclass(tree.carsrats,best=5)
+plot(cv.careats$size,cv.careats$dev,type="b")
+prune.carseats=prune.misclass(tree.carsrats,best=9)
+
+plot(prune.carseats)
+text(prune.carseats,pretty=0,cex=0.5)
+
+#neu Price >= 96.5 ShelveLoc la Bad hoac Medium, va Price >= 124.5 thi gia tri High dc du doan la No hay Price >= 14.5 va ShelveLoc la B or M thi High dc du doan mang gtri No
+```
+```{r}
+table(tree.pred,High.test)
+(82+67)/200
+
+prune.carseats=prune.misclass(tree.carsrats,best=15)
+plot(prune.carseats)
+text(prune.carseats,cex=0.5,pretty = 0)
+#tree.pred=predict(prune.carseats,Car)
+set.seed(1)
+train = sample(1:nrow(Boston),nrow(Boston)/2)
+tree.boston=tree(medv ~., Boston,subset = train)
+summary(tree.boston)
+              
+```
+
+
+```{r}
+plot(tree.boston)
+text(tree.boston,pretty = 0,cex=0.7)
+
+cv.boston=cv.tree(tree.boston)
+cv.boston
+
+plot(cv.boston$size,cv.boston$dev,type="b")
+prune.boston=prune.tree(tree.boston,best=5)
+plot(prune.boston)
+text(prune.boston,pretty=0)
+yhat=predict(tree.boston,newdata = Boston[-train,])
+boston.test=Boston[-train,"medv"]
+plot(yhat,boston.test)
+abline(0,1)
+mean((yhat - boston.test)^2)
+#doc dc/ du doan dc gtri bien dau ra dua vao cay hoi quy/ cay phan loai
+# viec cat tia cay la can thiet k ? cay can cat tia bot bn la (dev min thi tg ung so la cay can)
+
+```

@@ -1,0 +1,143 @@
+---
+title: "Untitled"
+author: "Đinh Quang Dũng"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r}
+library(ISLR)
+
+dim(Auto)
+set.seed(1)
+train = sample(392,196)
+train
+```
+
+xay dung mô hinh hqtt cua mpg ~ horsepower tren tap con cua auto, vi tri cac quan sat cua tap con do tuong ung voi train
+
+```{r}
+lm.fit=lm(mpg~ horsepower,data = Auto,subset=train)
+lm.fit
+```
+# mean = 23.26601
+```{r}
+
+attach(Auto)
+mean((mpg - predict(lm.fit,Auto))[-train]^2) # MSE = E((y-y_h)^2)
+```
+
+#mean = 18.79401
+```{r}
+lm.fit2=lm(mpg ~ poly(horsepower,2),data = Auto,subset = train)
+mean((mpg - predict(lm.fit2, Auto))[-train]^2)
+```
+#hoi quy da thuc truc giao bac 2
+```{r}
+lm.fit3=lm(mpg ~ poly(horsepower,3),data=Auto,subset = train)
+mean((mpg - predict(lm.fit3,Auto))[-train]^2)
+```
+co the su dung MSE sai so binh phuong trung binh nhu mot cach de so sanh su phu jop cua cac mo hinh
+
+
+
+
+xay dung cac mo hinh tren tap train gap n-1 phan tu va ap dung vao tap test/validation gom 1 ptu: train set(n-1) / validation set(1)
+
+
+khi chon ptu thu 1 lam validation set va cac ptu 2,3,..n lam train set thi ta tinh dc MSE1=(y_1 - Y_1_h)
+khi chon ptu thu 2 lam validation set va cac ptu 1,3,4,..n lam train set thi ta tinh dc MSE2=(y_2- Y_2_h)
+
+LOOCV se uoc luong gtri tb cua n gtri MSE_i(i=1,2,...n)
+sum(MSE_i)/n
+
+
+```{r}
+library(boot)
+glm.fit=glm(mpg ~ horsepower,data = Auto)
+cv.err=cv.glm(Auto,glm.fit)
+cv.err$delta
+#MSE tb = sum(MSE_i)/n
+
+
+cv.error=rep(0,5)
+for(i in 1:5){
+  glm.fit=glm(mpg ~ poly(horsepower,i),data = Auto)
+  cv.error[i]=cv.glm(Auto,glm.fit)$delta[1]
+}
+
+
+# xay dung  cac mo hinh  hq mpg theo cac da thuc truc gia ac 1,2,3,4,5 cua ca horsepower
+#cv.error la MSE tb cua 5 mo hinh do
+# so sanh MSE tb cua cac mo hinh, Gia tri MSE tb cang nho thi mo hinh cang tot
+
+cv.error
+# tu mo hinh bac 2 tro di, gia tri MSE tb k giam dang ke.Ta co the chon mo hinh theo da thuc truc giao bac 2 lam mo hinh cuoi cung
+```
+```{r}
+set.seed(17)
+cv.error.10=rep(0,10)
+# thuc hien k lan viec xay dung mo hinh tren tap train va thu lai tren tap validation. vadidation gom 1 trong k tap con cua bo du lieu ban dau
+for(i in 1:10){
+  glm.fit=glm(mpg ~ poly(horsepower,i),data = Auto)
+  cv.error.10[i]=cv.glm(Auto,glm.fit, K = 10)$delta[1]
+}
+cv.error.10
+```
+```{r}
+
+head(Portfolio)
+```
+```{r}
+alpha.fn = function(data, index){
+  X = data$X[index]
+  Y = data$Y[index]
+  return((var(Y) - cov(X, Y)) / (var(X) + var(Y) - 2*cov(X, Y)))
+}
+
+y = 1:100
+y
+
+alpha.fn(Portfolio, 1:100) # 0.5758321
+
+set.seed(1)
+alpha.fn(Portfolio,sample(100,100,replace=T)) # 0.73
+```
+
+alpha.fn = function(data,index){
+  X=data$X[index]
+  Y=data$Y[index]
+  return((var(y) - cov(X,Y)) / (var(X) + var(Y) - 2*cov(X,Y) ))
+}
+# co 1 ty. dau tu alpha (ty ) vao tai san X va (1 -alpha) (ty) vao tai san Y. Mong muon tim alpha sao cho rui ro la thap nhat, tuc la Var(alpha * X + (1-alpha)*Y) la nho nhat. nguoi ta ta tim ra cong thuc alpha phu hop a=(o_y^2 - o_XY) / (o_X^2 + o_Y^2 - 2o_XY)
+#alpha.fn la ham de tinh gtri alpja dua tren bo du lieu 
+
+alpha.fn(Portfolio,1:100) # 0.5758321
+
+```{r}
+
+boot(Portfolio,alpha.fn,R=1000)
+#thuc hienviec tinh ul cua alpha tren R =1000 mau gom 100 qsat co the trung lap cua bo du lieu Rortfolio
+# viec su dung bootstrap voi R = 1000 se thu dc ul cua alpha = 0.5758321 va Se(a) = 0.09366347
+```
+```{r}
+
+boot.fn=function(data,index){
+  return(coef(lm(mpg ~ horsepower ,data = data,subset=index)))
+}
+set.seed(1)
+boot.fn(Auto,sample(392,392,replace=T))
+
+boot(Auto,boot.fn,1000)
+
+
+summary(lm(mpg ~ horsepower,data = Auto))$coef
+
+boot.fn=function(data,index){
+  coefficients(lm(mpg ~ horsepower + I(horsepower^2),data = data,subset = index))
+}
+
+set.seed(1)
+boot(Auto,boot.fn,1000)
+```
+5-9 tr199

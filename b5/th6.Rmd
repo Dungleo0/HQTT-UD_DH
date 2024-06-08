@@ -1,0 +1,92 @@
+---
+title: "TH6"
+author: "Đinh Quang Dũng"
+date: "2024-03-13"
+output: html_document
+---
+
+
+tim tap con phu hop nhat
+return r^2,rss=sum(e^2),adjusted R2 ,cp,and BIC
+B1 xet xull model M0 : Y=a0+e
+
+b2 voi moi k =0,1,2,...,p-1 thuc hien
+
+a. xet p-k mo hinh du bao bang cach bo sung them 1 bien vao mo hinh M_k
+b.chon ra mo hinh tot nhat trong p-k mo hinh va goi la mo hinh M_(k+1)
+thu dc cac mo hinh M_0,m_1,..,M_p
+
+tot nhat dc hieu theo nghia mo hinh co rss min hoac r2 max
+vd k=0 xet p mo hinh du bao y=a0 + a1*x1 +e
+chon ra mo hinh tot nhat trong p mo hinh tren thi dc M_1
+k=1, them 1 bien vao mo hinh M_1, thu dc p-1 mo hinh 2 vien 
+chon ra mo hinh tot nhat trong p-1 mo hinh 2 bien, thu dc M_2
+
+b3 chon mo hinh tot nhat trong cac mo hinh M_0,M_1,...,M_p theo tieu chuan R2 hieu chinh max,r2 max,rss min ,bic min,cp min
+
+
+```{r}
+# install.packages("leaps")
+library(leaps)
+regfit = regsubsets(hp ~ mpg + wt + drat + qsec , data = mtcars,method = "forward")
+summary(regfit)
+
+
+```
+bien dc dua vao mo hinh tot nhat se danh dau *
+o day trong cac mo hinh 1 bien , mo hinh tot nhat dc chon rss min/ r2 max la mo hinh gom bien mpg
+mo hinh 2 bien dc chon gom bien mpg va qsec
+mo hinh 3 bien dc chon gom mpg,qsec,wt
+
+```{r}
+
+names(regfit)
+
+```
+
+```{r}
+
+reg = regsubsets(hp ~ ., data = mtcars,method = "forward")
+summary(reg)
+
+```
+
+
+mo hinh 6 bien tot nhat
+theo tieu chuan r2 , r2 cang lon thi mo hinh cac tot, mo hinh co r2 max la mo hinh tot nhat
+theo tieu chaun rss mo hinh tot nhat la mo hnh co rss min
+theo tieu chaun bic mo hinh tot nhat la mo hnh co bic min
+
+
+
+```{r}
+
+test = regsubsets(hp ~ ., data = mtcars,nvmax = 10,method = "forward")
+bwd=summary(test)
+bwd
+coef(test,6)
+names(bwd)
+
+bwd$rsq #r2
+
+which.max(bwd$rsq)
+
+bwd$rss
+which.min(bwd$rss)
+
+bwd$bic
+
+which.min(bwd$bic)
+
+bwd$cp
+
+which.min(bwd$cp)
+```
+
+
+
+
+
+
+
+

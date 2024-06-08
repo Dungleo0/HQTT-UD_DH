@@ -1,0 +1,130 @@
+---
+title: "Untitled"
+author: "Đinh Quang Dũng"
+date: "2024-03-03"
+output: html_document
+---
+Đề bài: Mô hình đúng: Y = 3 + 2X
+
+Sinh ra 100 bộ (X,Y) theo cách sau:
+
+a.  Lấy 100 giá trị của X từ PP chuẩn N(1, 1); set.seed(1)
+b.  Lấy 100 giá trị sai số e từ pp chuẩn n(0; 0.04); set.seed(2)
+c.  Tạo 100 giá trị của Y từ mô hình đúng cộng thêm e: YY = 3 + 2X + e
+
+Từ 100 bộ dữ liệu (X. Y) được tạo, hãy ước lượng mô hình Y = a_0 + a_1\*x + e
+
+```{r}
+set.seed(1)
+X = rnorm(100, 1, 1)
+```
+
+```{r}
+set.seed(2)
+e = rnorm(100, 0, 0.2)
+```
+
+```{r}
+Y = 3 + 2*X + e
+```
+Ước lượng mô hình:
+
+```{r}
+matrix = cbind(X, Y)
+data = as.data.frame(matrix)
+lm.fit = lm(Y ~ X, data)
+lm.fit
+```
+*Kiểm định a_0, a_1:*
+
+```{r}
+summary(lm.fit)
+```
+Do p-value \< 2e-16 đối với cả X và Intercept nên ta chấp nhận rằng a_0 và a_1 khác 0.
+
+*Kiểm định xem phần dư có tuân theo pp chuẩn hay không?*
+
+Do p-value của chúng ta chưa đủ nhỏ, nên ta chấp nhận H0, nghĩa là chấp nhận rằng phần dư tuân theo pp chuẩn.
+
+```{r}
+e_h = lm.fit$residuals
+shapiro.test(e_h)
+```
+*Kiểm định xem gttb của e_h có bằng 0 hay không?* Do e_h tuân theo pp chuẩn nên ta sử dụng e_h
+
+Dễ thấy rằng p-value = 1 \> 0.05 nên ta chấp nhận H0, nghĩa là chấp nhận rằng gttb của e_h bằng 0.
+
+```{r}
+t.test(e_h)
+```
+Vẽ đồ thị
+
+```{r}
+plot(data, main = "Biểu đồ tán xạ")
+abline(lm.fit, col='red')
+```
+Chia bộ dữ liệu thành tập train và tập test.
+
+Xử lí trên training set: Mô hình hồi quy lý thuyết: Y = a_0 + a_1 \* X + e - Ước lượng hệ số hồi quy: a_0h và a_1h - Đưa ra khoảng tin cậy cho a_0 và a_1 - Kiểm định/Đánh giá các hệ số hồi quy a_0h và a_1h xem có khác 0 hay không? - Kiểm định phần dư có tuân theo pp chuẩn với giá trị trung bình bằng 0 hay không?
+
+Đánh giá mô hình dựa vào testing set: - Tính TSS = sum((y - mean(y))\^2) - Tính RSS = sum(e\^2) - R2 = 1 - RSS/TSS càng lớn thì càng tốt.
+
+Chúng ta sẽ sử dụng bộ data iris:
+
+```{r}
+data(iris)
+```
+Sau đó ta chia dữ liệu tỉ lệ 7:3
+
+```{r}
+set.seed(1)
+sample <- sample(c(TRUE, FALSE), nrow(iris), replace=TRUE, prob=c(0.7, 0.3))
+train <- iris[sample, ]
+
+test <- iris[!sample, ]
+```
+Đầu tiên ta sẽ xử lý tập train. Ta sẽ ước lượng a_0h và a_1h
+
+Uoc luong HSHQ: a_0h = 4.23794, a_1h = 0.42855
+
+
+```{r}
+lm.fit = lm(Sepal.Length ~ Petal.Length, train)
+summary(lm.fit)
+```
+Do p-value của cả Intercept và Petal.Length đều \< 2e-16 nên ta kết luận rằng cả Intercept và Petal.Length này đều thực sự khác 0
+
+Khoảng tin cậy 95% cho các ước lượng hệ số:
+
+Ket luan: KTC 95% cho a_0 la [4.04; 4.42]
+
+```{r}
+confint(lm.fit)
+```
+Kiểm định phần dư:
+H0: phan du tuan theo phan phoi chuan
+H1: phan du khong tuan theo pp chuan
+
+Do p-value là lớn (0.7955) nên ta chấp nhận H0, nghĩa là chấp nhận rằng phần dư tuân theo phân phối chuẩn.
+
+```{r}
+e_iris = lm.fit$residuals
+shapiro.test(e_iris)
+```
+Vì vậy, ta sẽ dùng t.test() để kiểm tra GTTB của phần dư:
+
+Dễ thấy, p-value = 1 \> 0.05 nên ta chấp nhận H0, nghĩa là chấp nhận rằng GTTB của phần dư là 0.
+
+```{r}
+t.test(e_iris)
+```
+Tiếp theo ta sẽ đánh giá mô hình qua tập test:
+
+```{r}
+Y_iris = test$Sepal.Length
+mean_Y = mean(Y_iris)
+TSS = sum((Y_iris - mean_Y) * (Y_iris - mean_Y))
+RSS = sum((test$Sepal.Length - lm.fit$coefficients[1] - lm.fit$coefficients[2] * test$Petal.Length) ^ 2)
+R2 = 1 - RSS/TSS
+R2
+```

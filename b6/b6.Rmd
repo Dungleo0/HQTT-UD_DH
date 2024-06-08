@@ -1,0 +1,117 @@
+---
+title: "b6"
+author: "Đinh Quang Dũng"
+date: "2024-03-20"
+output: html_document
+---
+
+
+
+
+
+```{r}
+
+
+library(ISLR)
+attach(Smarket)
+names(Smarket)
+head(Smarket,1)
+dim(Smarket)
+summary(Smarket)
+pairs(Smarket)
+
+cor(Smarket[,-9]) # loai cot k phai numberic la direction
+
+plot(Volume)
+
+#gan Down la 0 , Up la 1
+# P(Y=1|X)=P(Direction = Up|X)=1 / (1 + e^-(-0.126 - 0.073 * Lag1 - 0.042 * Lag2 + 0.011 * Lag3 + 0.008 * Lag4 + 0.01 * lag5 + 0.135 * volume))
+glm=glm(Direction ~ Lag1 +Lag2+ Lag3+ Lag4+ Lag5+ Volume,data = Smarket,family = binomial)
+
+glm
+Direction
+summary(glm)
+
+# dua theo cac p-value nhan thay cac bien k co y nghia trong mo hinh , hay caca hso cua cac bien co the coi la bang 0 trong mo hinh 
+
+summary(glm)$coef
+summary(glm)$coef[,1]
+
+#dua ra ul cac hso trong mo hinh hoi quy logistic
+summary(glm)$coef[,1]
+#predict output P(Y=1|X)
+glm.probs = predict(glm,type = "response")
+# khi k dua tham so de xdinh bo du lieu dung de du doan, mac dinh se du doan tren bo du lieu da dung de xay dung mo hinh
+
+contrasts(Direction)
+
+# dua ra du doan ve xac suat P(Y=1|X)=P(Direction = Up | X)
+glm.probs[1:10]
+
+Smarket[1,2:7]
+
+# dua vao mo hinh hoi quy logistic va xay dung, voi du lieu cua quan sat dau tien cua Smarket, ta du doan xas xuat thi truong di len la 0.5070841
+
+glm.pred=rep("Down",1250)
+glm.pred[glm.probs > .5] = "Up"
+# nEU XS DU DOAN THI TRUONG DI LEN > 0.5 THI KHI DO T DU DOAN THI TRUONG DI LEN CON SO 0.5 CO THE THAY DOI
+
+glm.pred
+
+table(glm.pred,Direction)
+
+(145+507)/1250
+#Direction la xu huong thuc te, glm.pred la xu huong du doan
+# de bt hieu suat cua mo hinh ta tinh do chinh xac khi du doan
+#(145 + 507)/1250 do chinh xac
+(145 + 507)/1250
+#(507 + 145) / 1250 (a +b)/n do chinh xac
+
+mean(glm.pred == Direction)
+
+
+# de danh gia tot hon do chinh xac cua mo hinh ta dieu chinh tren tap train va kiem tra tren tap test
+#glm tren tap train va ap dung vao tap test vs ca 6 bien
+train=(Year < 2005)
+Smarket.2005 = Smarket[!train,]
+dim(Smarket.2005)
+head(Smarket.2005)
+
+#subset(Smarket, Year = 2005)
+Direction.2005 = Direction[!train]
+glm.fit = glm(Direction ~ Lag1 + Lag2 + Lag3 + Lag4 + Lag5 + Volume,data = Smarket,family=binomial,subset=train)
+# xay dung mo hinh dua tren bo du lieu tu 2001 > 2004. sau do kiem tra tren bo du lieu cua nam 2005
+head(subset(Smarket,Year < 2005),1)
+
+#de danh gia tot hon do chinh xac cua mo hinh. ta dieu chinh mo hinh tren tap train va kiem tra tren tap test
+#glm tren tap train va ap dung vao tap test vs ca 6 bien
+
+train=(Year < 2005)
+Smarket.2005 = Smarket[!train,]
+Direction.2005 = Direction[!train]
+
+# dua ra du doan ve xac suat thi truong di len P(Y=1|X) = P(Direction = Up|X) cua bo du lieu Smarket.2005
+glm.probs[1:10]
+
+glm.pred = rep("Up",252)
+glm.pred[glm.probs <= .5]="Down"
+
+table(glm.pred,Direction.2005)
+ymean(glm.pred == Direction.2005) # do chinh xac
+
+mean(glm.pred != Direction.2005) # test test erro rate
+
+(77 + 44)/nrow(Smarket.2005)
+
+summary(glm.fit)
+
+
+
+
+
+
+
+
+```
+
+

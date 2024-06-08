@@ -1,0 +1,71 @@
+---
+title: "Untitled"
+author: "Đinh Quang Dũng"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+
+
+```{r}
+#phan cum phan cap du lieu: dua vao gia tri cua cac quan sat, tinh toan khoang cach gia cac qsat va phan cum chung theo gtri khoang cach do 
+
+cmed = read.table("D:/PTHQ/b11/Canmed.txt",header = T,row.names = 1)
+cmed
+
+cmed=cmed[-14,] # omit canada row
+d=dist(scale(cmed))
+#scale()  (x -x_h)/s dist la khoang cach Euclide
+d
+
+
+
+clust = hclust(d)
+plot(cc<= clust,cex=0.8)
+cmed=read.table("D:/PTHQ/b11/Canmed.txt",header = T,row.names = 1)
+cmed=cmed[-14,]
+d=dist(scale(cmed))
+d
+
+clust = hclust(d)
+clust
+
+plot(cc <- clust,cex=0.8)
+#la bieu do ve khoang cach gia cac quan sat / cac tinh
+# dua vao khoang cach do, co the phan cum cho cac quan sat
+# Neu khoang cach giua qsat <= 4 thi ta cho 2 qsat do thuoc cung 1 nhom. Khi do, bo du lieu ban dau dc chia thanh bn nhom/cum moi nhom/cum co bn qsat
+abline(h=4,col="red") # 4 nhom, 1 nhom gom tinh Yukon, nhom gom cac tinh Quebec va Nothwesttlerritiries, nhom 3 gom... nhom 4 gom...
+
+abline(h=3,col="red")# co 5 nhom
+
+#viec chia nhom chi phu thuoc vao khoang cach giua cac qsat
+#iris = iris[1:30]
+dim(iris)
+head(iris[1:30,])
+# ve bieu do dendrogram vs 30 qsat dau tien cua bo du lieu iris
+
+data_iris=iris[1:30,-5]
+data_iris
+
+
+# Nạp các gói đã cài đặt
+library(ape)
+
+# Tính ma trận khoảng cách và chuẩn hóa dữ liệu
+id <- dist(scale(data_iris))
+
+# Tạo dendrogram
+fit <- hclust(id)
+
+# Vẽ biểu đồ dendrogram dưới dạng phylogram
+par(mfrow = c(2, 2))
+plot(as.phylo(fit), type = "phylogram", cex = 0.8, label.offset = 0.1, tip.col = c(rep("red", 50), rep("blue", 50), rep("green", 50)))
+# Vẽ biểu đồ thứ hai
+plot(as.phylo(fit), type = "fan", cex = 0.8, label.offset = 0.1, tip.col = c(rep("purple", 50), rep("orange", 50), rep("yellow", 50)))
+
+# Vẽ biểu đồ thứ ba
+plot(as.phylo(fit), type = "radial", cex = 0.8, label.offset = 0.1, tip.col = c(rep("cyan", 50), rep("magenta", 50), rep("brown", 50)))
+
+# Vẽ biểu đồ thứ tư
+plot(as.phylo(fit), type = "cladogram", cex = 0.8, label.offset = 0.1, tip.col = c(rep("gray", 50), rep("black", 50), rep("pink", 50)))
+```

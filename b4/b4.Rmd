@@ -1,0 +1,51 @@
+---
+title: "Untitled"
+author: "Đinh Quang Dũng"
+date: "2024-03-06"
+output: html_document
+---
+
+```{r}
+
+library(datasets)
+
+names(mtcars)
+
+only = lm(mpg ~ 1, data =mtcars) # y = a0 + e
+
+summary(only)
+
+one = lm(mpg ~ cyl,data = mtcars)  # y = a0 + a1*Xi + e
+two =lm(mpg ~ cyl + disp,data = mtcars) # y = a0 + a1*Xi + a2*Xj + e
+three = lm(mpg ~ cyl + disp + hp, data = mtcars) # y = a0 + a1*cyl + a2*disp + a3*hp
+three = lm(mtcars$mpg ~ mtcars$cyl + mtcars$disp + mtcars$hp)
+
+attach(mtcars)
+
+three = lm(mpg ~ cyl + disp + hp)
+all = lm(mpg ~ .,data = mtcars)
+# All:  dua ra mo hinh hqtt
+# kiem dinh cac hs trong mo hinh hoi quy 
+# kiem dinh phan du
+chisq.test(cyl,disp)
+cor(cyl,disp)
+summary(all)
+shapiro.test(all$residuals)
+t.test(all$residuals)
+pairs(mtcars)
+# FORWARD
+forward = step(only, formula(all), direction = "forward",trace = 0)
+# FORWARD
+backward = step(all, formula(all), direction = "backward",trace = 0)
+summary(forward)
+forward$anova #c1
+backward$anova
+summary(only)
+
+
+
+
+
+
+
+```

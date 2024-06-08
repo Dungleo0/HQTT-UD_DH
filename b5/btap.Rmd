@@ -1,0 +1,67 @@
+---
+title: "test"
+author: "Đinh Quang Dũng"
+date: "2024-03-13"
+output: html_document
+---
+
+tap du lieu Hitters trong thu vien ISLR gom 20 bien so lien quan den giai bong chay MLB mua giai 1986 va 1987. ta mong muon dua ra du doan va muc luong cua cac cau thu theo cac bien con lai. thuc hien ptich tren phan mem thong ke R va trloi
+
+
+1.bo du lieu dc thu thap tu bn cau thu va bao nhieu bien
+2.bo du lieu co bn qsat chua du lieu trong? loai bo cac qsat do
+3.ve bieu do phan tan de qsat truc quan tin tuong quan giua cac muc luong cua cac cau thu va cac bien con lai
+4.dua vao cac bieu do o y c du doan xem bien nao co tuong quan chat nhat voi muc luong? ktra
+```{r}
+library("ISLR")
+#install.packages("leaps")
+library(leaps)
+data = Hitters
+
+
+attach(data)
+
+dim(data)
+
+sum(is.na(data))
+
+data=na.omit(data)
+
+sum(is.na(data))
+
+data
+
+ul = lm(data$Salary ~ .,data = Hitters)
+summary(ul)
+plot(ul)
+
+backward = step(ul,formula(ul),direction = "backward",trace = 0 )
+summary(backward)
+
+summary(backward)
+test = regsubsets(Salary ~ ., data = Hitters, nvmax = 10, method = "forward")
+
+bwd1=summary(test)
+bwd1
+coef(test,6)
+
+test1 = regsubsets(data$Salary ~ ., data = Hitters,nvmax = 10,method = "forward")
+bwd2=summary(test1)
+bwd2
+coef(test1,8)
+
+
+test2 = regsubsets(data$Salary ~ ., data = Hitters,nvmax = 10,method = "forward")
+bwd3=summary(test2)
+bwd3
+coef(test2,10)
+
+
+
+which.min(bwd1$rss)
+
+which.max(bwd1$rsq)
+
+which.min(bwd1$bic)
+
+```
